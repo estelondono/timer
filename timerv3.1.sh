@@ -2,85 +2,82 @@
 
 # VERSIÓN 3.1
 
-# Función timer obtenido de
+# Countdown timer with the help from
 # http://superuser.com/questions/611538/is-there-a-way-to-display-a-countdown-or-stopwatch-timer-in-a-terminal
-# y con ayuda de 
 # https://linuxconfig.org/bash-scripting-tutorial
-# Y para "case" la ayuda fue de
+# Help with "case ... esac" from
 # http://askubuntu.com/questions/1705/how-can-i-create-a-select-menu-in-a-shell-script
-# Algo más de ayuda con los vectores de
+# Help with the arrays from
 # http://tldp.org/LDP/Bash-Beginners-Guide/html/sect_10_03.html
 
-# Limpiamos la pantalla
+# Clear the screen to show all the scripts
 clear;
 
-# Detectar si el usuario pulsa Ctrl + C
+# Catch when the user press "Ctrl + C"
 trap bashtrap INT
 echo $INT
-# Imprime explicación y sale cuando se pulsa Ctrl + C
+# Print a message if the user press "Ctrl + C"
 bashtrap()
 {
-    echo -e "\n\n\033[1;31mSaliendo del temporizador por orden del usuario.\n"
+    echo -e "\n\n\033[1;31mEnding countdown by user.\n"
     exit
 }
 
-# Con esta función imprimimos en pantalla la ayuda del Script
-function ayuda {
-    echo -e '\nEl primer término pasado a la función debe ser:'
-    echo 'Un número (entero) de minutos para el temporizador'
-    echo -e 'o "p" para temporizador de ciclo de amasado de panes y escoger el tipo de amasado.\n'
+# The "help" text
+function help {
+    echo -e '\nThe first parameter has to be:'
+    echo 'An integer for the countdown'
+    echo -e 'or "p" to select an option.\n'
 }
 
-# Función que crea el contador de tiempo y reproduce el sonido
+# Function to start the countdown and play the sound
 function timer {
-        time=$((`date +%s` + $1*60)); 
+        time=$((`date +%s` + $1*60)); # If you want to use seconds erase "*60" from this line
         while [ "$time" -ge `date +%s` ]; do 
             echo -ne "\033[1;34m$(date -u --date @$(($time - `date +%s` )) +%H:%M:%S)\r";
             sleep 0.1
         done
-    # Imprime la hora en que se activó la alarma en rojo y vuelve a poner las letras sin colores
-    echo -e "\n\033[0mEsta alarma se activó el: \033[1;31m`date`\033[0m\n"
-    # Reproduce el sonido | Se tiene que la dirección completa
-    # para que se pueda reproducir desde cualquier lugar que se corra el Script
+    # Print the hour when the alarm goes on
+    echo -e "\n\033[0mAlarm: \033[1;31m`date`\033[0m\n"
+    # Plays the sound for the alarm
+    # Use the complete path to the file to call the script from every place
     mplayer ~/Documentos/Scripts/alarma.mp3
 }
 
-# Revisa el primer parámetro pasado al Script
+# Analise the first parameter that enters the script
 
-# Si el primer parámetro es un número, correr un solo temporizador
-# Sólo acepta números enteros
+# If the parameter is an integer, call just one countdown-timer
 if [[ "$1" =~ ^-?[0-9]+$ ]];
     then
         timer $1
 
-# Si el primer parámetro es "p" realiza un primer temporizador de 5 minutos
-# y luego un segundo temporizador según la selección realizada
+# If the parameter is "p" print a selection for the user
 elif [ $1 = p ]; then
     echo -e "***TIPOS DE AMASADO*** \n"
-    PS3="Seleccione una de las opciones anteriores: "
+    PS3="Select an option: "
     OPTIONS=("Amasado Tradicional" "Amasado Mejorado" "Amasado Intensivo" "Salir")
     select opt in "${OPTIONS[@]}"
     do
         case $REPLY in
-            1)  timer 5 # Tiempo de amasado en PRIMERA velocidad
+            1)  timer 5 # Just call a timer for 5 minutes
                 break
                 ;;
-            2)  timer 5 # Tiempo de amasado en PRIMERA velocidad
-                timer 5 # Tiempo de amasado en SEGUNDA velocidad
+            2)  timer 5 # 5 minutes countdown
+                timer 5 # and another 5 minutes countdown
                 break
                 ;;
-            3)  timer 5 # Tiempo de amasado en PRIMERA velocidad
-                timer 8 # Tiempo de amasado en SEGUNDA velocidad
+            3)  timer 5 # 5 minutes countdown
+                timer 8 # and another 8 minutes countdown
                 break
                 ;;
-            4)  echo -e "\nSaliendo del temporizador\n"
+            4)  echo -e "\nExiting the countdown\n"
                 break
                 ;;
-            *)  echo -e "\033[1;31mSeleccion inválida\033[0m"
-                # Imprime la lista de opciones
+            *)  echo -e "\033[1;31mInvalid selection\033[0m"
+                # Print the diferent options from $OPTIONS
                 i="0"
                 t=${#OPTIONS[*]}
-                echo -e "\n***TIPOS DE AMASADO*** \nEscoger el tipo de amasado para el temporizador\n"
+                echo -e "\n***KNEAD TYPES*** \nChoose the kneading type you need:\n"
                 while [ $i -lt "$t" ]; do
                     let i=i+1
                     echo "$i) ${OPTIONS[(($i-1))]}"
@@ -89,10 +86,10 @@ elif [ $1 = p ]; then
         esac
     done
 
-# Si el primer parámetro no es un número entero ni "p" imprime una pequeña ayuda y termina sale
+# If the first parameter isn't an integer or "p", print the help and exit.
 else
-    ayuda
+    help
 fi
 
-# Sale del Script
+# Exit the script
 exit
